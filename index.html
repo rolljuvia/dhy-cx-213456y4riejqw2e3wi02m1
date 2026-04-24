@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#06060e">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>传讯</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: #06060e;
+            color: #e5e5e5;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ---- 星空背景 ---- */
+        .stars {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            animation: twinkle var(--dur) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ---- 柔光装饰 ---- */
+        .glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-1 {
+            width: 300px; height: 300px;
+            background: #c5a47e;
+            top: -80px; right: -60px;
+        }
+        .glow-2 {
+            width: 250px; height: 250px;
+            background: #7FA6CD;
+            bottom: 10%; left: -40px;
+        }
+
+        /* ---- 主容器 ---- */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 460px;
+            margin: 0 auto;
+            padding: 60px 24px 40px;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* ---- 头部 ---- */
+        .header {
+            text-align: center;
+            margin-bottom: 42px;
+            animation: fadeDown 0.8s ease;
+        }
+        .header-icon {
+            font-size: 20px;
+            letter-spacing: 6px;
+            margin-bottom: 14px;
+            opacity: 0.5;
+        }
+        .header h1 {
+            font-size: 26px;
+            font-weight: 400;
+            letter-spacing: 8px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #e5e5e5 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .subtitle {
+            font-size: 12px;
+            color: #5a5a5a;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
+        .divider {
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #444, transparent);
+            margin: 18px auto 0;
+        }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- 角色列表 ---- */
+        .role-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .role-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            color: inherit;
+            animation: fadeUp 0.5s ease both;
+            position: relative;
+            overflow: hidden;
+        }
+        .role-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+        .role-card:hover::before,
+        .role-card:active::before {
+            opacity: 1;
+        }
+        .role-card:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .role-card.empty {
+            opacity: 0.3;
+            cursor: default;
+            border-style: dashed;
+        }
+        .role-card.empty:active {
+            transform: none;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 每张卡片错开动画 */
+        .role-card:nth-child(1) { animation-delay: 0.05s; }
+        .role-card:nth-child(2) { animation-delay: 0.10s; }
+        .role-card:nth-child(3) { animation-delay: 0.15s; }
+        .role-card:nth-child(4) { animation-delay: 0.20s; }
+        .role-card:nth-child(5) { animation-delay: 0.25s; }
+        .role-card:nth-child(6) { animation-delay: 0.30s; }
+        .role-card:nth-child(7) { animation-delay: 0.35s; }
+        .role-card:nth-child(8) { animation-delay: 0.40s; }
+        .role-card:nth-child(9) { animation-delay: 0.45s; }
+        .role-card:nth-child(10) { animation-delay: 0.50s; }
+
+        /* ---- 头像 ---- */
+        .avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ---- 角色信息 ---- */
+        .role-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .role-name {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+        .role-desc {
+            font-size: 11px;
+            color: #666;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---- 在线状态 ---- */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4a9e6a;
+            flex-shrink: 0;
+            box-shadow: 0 0 6px rgba(74, 158, 106, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .empty .status-dot {
+            background: #333;
+            box-shadow: none;
+            animation: none;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ---- 底部 ---- */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-bottom: 20px;
+            animation: fadeUp 0.5s ease 0.6s both;
+        }
+        .footer p {
+            font-size: 11px;
+            color: #333;
+            letter-spacing: 2px;
+        }
+
+        /* ---- 安全区适配 ---- */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .container {
+                padding-bottom: calc(40px + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-icon">✦ ✦ ✦</div>
+        <h1>传 讯</h1>
+        <div class="subtitle">Your very voice is in my heartbeat.</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="role-list" id="roleList"></div>
+
+    <div class="footer">
+        <p>✦ You're all my pleasure, my hope and my song ✦</p>
+    </div>
+</div>
+
+<script>
+// ============================================
+//   在这里配置你的角色！
+//   name:  角色名字
+//   link:  对应的 Netlify 传讯链接
+//   desc:  一句话描述（选填）
+//   avatar: 头像图片链接（选填，不填显示名字首字）
+//
+//   空着的坑位不用删，留着就行
+//   想加新角色就把 name 和 link 填上
+// ============================================
+// ============================================
+//   随机状态文案池
+//   每次打开页面，每个角色会随机显示一条
+//   你可以随时在这里增减文案
+// ============================================
+const RANDOM_DESCS = [
+    "在线",
+    "想你了",
+    "在等你",
+    "晚安",
+    "忙碌中",
+    "刚刚上线",
+    "在想你",
+    "今天也很想见你",
+    "方便聊聊吗",
+    "在发呆",
+    "刚醒",
+    "睡不着",
+    "有话想跟你说",
+    "等你很久了",
+    "今天天气真好",
+    "无聊中",
+    "嗯？你来了",
+    "一直在这里",
+];
+
+const ROLES = [
+    { name: "陆沉", link: "https://luchen-strong-dango-97df6a.netlify.app/", desc: "", avatar: "" },
+    { name: "萧逸", link: "https://xiaoyi-bright-tapioca-800b09.netlify.app/", desc: "", avatar: "" },
+    { name: "齐司礼", link: "https://qisili-luminous-klepon-1b2614.netlify.app/", desc: "", avatar: "" },
+    { name: "夏萧因", link: "https://xiaxiaoyin-tiny-paprenjak-02e0d0.netlify.app/", desc: "", avatar: "" },
+    { name: "顾时夜", link: "https://gushiye-pzt3r8nq5jfhy6mc2xw9avp4k7b8.netlify.app/", desc: "", avatar: "" },
+    { name: "易遇", link: "https://yiyu-spontaneous-biscotti-66465f.netlify.app/", desc: "", avatar: "" },
+    { name: "柏源", link: "https://baiyuan-elegant-khapse-cbf685.netlify.app/", desc: "", avatar: "" },
+    { name: "夏鸣星", link: "https://xiamingxing-willowy-buttercream-1b9a.netlify.app/", desc: "", avatar: "" },
+    { name: "夏以昼", link: "https://xiayizhou-magnificent-empanada-cd0896.netlify.app/", desc: "", avatar: "" },
+    { name: "测试链接", link: "https://test-fancy-medovik-21t.netlify.app/", desc: "", avatar: "" },
+];
+
+// ---- 渲染角色列表 ----
+const listEl = document.getElementById('roleList');
+
+function randomDesc() {
+    return RANDOM_DESCS[Math.floor(Math.random() * RANDOM_DESCS.length)];
+}
+
+ROLES.forEach((role, i) => {
+    const isEmpty = !role.name;
+    const card = document.createElement(isEmpty ? 'div' : 'a');
+    card.className = 'role-card' + (isEmpty ? ' empty' : '');
+
+    if (!isEmpty && role.link) {
+        card.href = role.link;
+        card.target = '_blank';
+        card.rel = 'noopener';
+    }
+
+    const avatarContent = isEmpty
+        ? '?'
+        : (role.avatar
+            ? `<img src="${role.avatar}" alt="${role.name}">`
+            : role.name.charAt(0));
+
+    // desc 优先用你手动填的，没填就随机
+    const descText = isEmpty ? '尚未配置' : (role.desc || randomDesc());
+
+    card.innerHTML = `
+        <div class="avatar">${avatarContent}</div>
+        <div class="role-info">
+            <div class="role-name">${isEmpty ? '等待入驻…' : role.name}</div>
+            <div class="role-desc">${descText}</div>
+        </div>
+        <div class="status-dot"></div>
+    `;
+
+    listEl.appendChild(card);
+});
+
+// ---- 星空粒子 ----
+const starsEl = document.getElementById('stars');
+let starsHTML = '';
+for (let i = 0; i < 80; i++) {
+    const x = (Math.random() * 100).toFixed(1);
+    const y = (Math.random() * 100).toFixed(1);
+    const size = Math.random() > 0.7 ? 2.5 : 1.5;
+    const delay = (Math.random() * 5).toFixed(2);
+    const dur = (2 + Math.random() * 4).toFixed(1);
+    starsHTML += `<div class="star" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;--delay:${delay}s;--dur:${dur}s"></div>`;
+}
+starsEl.innerHTML = starsHTML;
+
+// ---- PWA 注册 ----
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+}
+</script>
+
+</body>
+</html>
